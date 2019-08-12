@@ -1,0 +1,77 @@
+addpath('/zifnas/Carla/Tactbox/Cell_assembly_detection/Programs_and_data/Carla/Carla_MaxFolder/CWEM');
+% The matrix new_data is the matrix that contains the info, in particular new_data.spikeT_BegEnd has the 
+% spiketrain cutted properly in databasePrepro.m
+% load('StableOr_rev4.mat')
+% load('AsStableOr_rev4.mat')
+% load('DispAnStableOrRev4.mat')
+
+% Ex of files
+% load('Lastrev1_OrW.mat')
+% load('AsStandOrW_lastrev1_rl2.mat')
+% load('Displastrev1_Rl2_OrWStand.mat')
+
+% load('Rev2_OrW.mat')
+% load('AsPruOrW_rev2_rl2.mat')
+% load('DispRev2_Rl2_OrWPru.mat')
+
+% load('Rev2_RevW.mat')
+% load('AsPruRevW_rev2_rl2.mat')
+% load('DispRev2_Rl2_RevWPru.mat')
+
+% load('Rev2_ExtW.mat')
+% load('AsPruExtW_rev2_rl2.mat')
+% load('DispRev2_Rl2_ExtWPru.mat')
+
+
+name1=strcat('Lastrev1_OrRevW.mat');
+load(name1)
+names=strcat('An_Disp_Pru_',name1);
+load(names)
+fignum=33;
+%%%%%%% Find number of units of the Striatum and VTA nneuS
+clear new_spM
+ new_spM=new_data;
+ 
+%%%%%%%% For the pruned algorithm you have to add these two lines
+As_across_bins=As_acr_bins_pru;
+As_order=As_order_pru;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+TotAn=size(new_spM.spike_regionNoId,2);
+for k=1:size(new_spM.spike_regionNoId,2)
+    nneuVS{k}=0;
+    nneuVTA{k}=0;
+end
+
+for k=1:size(new_spM.spike_regionNoId,2)
+    for j=1:size(new_spM.spike_regionNoId{k},2)
+        [nneuVS{k}] = countNeu(new_spM.spike_regionNoId{k}(1,j),1,nneuVS{k});
+        [nneuVTA{k}] = countNeu(new_spM.spike_regionNoId{k}(1,j),1,nneuVTA{k});
+    end
+
+end
+
+
+%%%%% Find Pairs in one region and shared between two differnt regions
+% pairs diveded by regions with all info
+[pairs_r,pairs_vsvs,pairs_vsvta,pairs_vtavta] = PairsInfo(As_across_bins,As_order,nneuVS,TotAn);
+
+clear a b A B i ii j k
+%%%% # of possible pairs in the single regions and intra-region
+for k=1:size(Nneu,2)
+    NP_vsvs{k}=[];
+    NP_vtavta{k}=[];
+    NP_vsvta{k}=[];
+end
+
+for k=1:size(Nneu,2)
+NP_vsvs{k}=(nneuVS{k}*(nneuVS{k}+1))/2;
+NP_vtavta{k}=(nneuVTA{k}*(nneuVTA{k}+1))/2;
+NP_vsvta{k}=(nneuVS{k}*nneuVTA{k});
+end
+%%%%%%% Struct pairs classified by bin 
+
+[struct_pair] = PairsOrgByPair(pairs_vsvta);
+
+%%%%%%% Lag distribution at fixed bin
+
+pairs_lag_XXX=pairs_vsvta;
